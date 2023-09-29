@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../app');
 const Category = require('../models/Category');
+const Image = require('../models/Image');
+require('../models');
 
 let token;
 let id;
@@ -16,6 +18,7 @@ beforeAll(async () => {
 
 test('GET /news', async () => {
   const res = await request(app).get('/news');
+  console.log(res.body);
   expect(res.status).toBe(200);
   expect(res.body).toBeInstanceOf(Array);
 });
@@ -40,9 +43,24 @@ test('POST /news', async () => {
   expect(res.body.headline).toBe(body.headline);
 });
 
+test('POST /news/:id/images', async () => {
+  const image = await Image.create({ 
+    url: 'http://cualquiercosa.jpg', 
+    publicId: 'id' 
+  })
+  const res = await request(app)
+    .post(`/news/${id}/images`)
+    .send([image.id])
+    .set('Authorization', `Bearer ${token}`)
+  await image.destroy();
+  expect(res.status).toBe(200);
+  expect(res.body.length).toBe(1);
+});
+
 test('DELETE /news/:id', async () => {
   const res = await request(app)
     .delete(`/news/${id}`)
     .set('Authorization', `Bearer ${token}`);
   expect(res.status).toBe(204);
 });
+
